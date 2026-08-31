@@ -1,0 +1,244 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CITIZEN
+  WORKER
+  OFFICER
+  ADMIN
+}
+
+enum Category {
+  GARBAGE
+  ROAD
+  POTHOLE
+  WATER_LEAKAGE
+  WATER_SUPPLY
+  DRAINAGE
+  STREETLIGHT
+  PUBLIC_PROPERTY_DAMAGE
+  ILLEGAL_DUMPING
+  OTHER
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ComplaintStatus {
+  SUBMITTED
+  VERIFIED
+  ASSIGNED
+  IN_PROGRESS
+  RESOLVED
+  CITIZEN_VERIFIED
+  REJECTED
+  REOPENED
+}
+
+enum ImageType {
+  BEFORE
+  AFTER
+  EVIDENCE
+}
+
+enum NotificationType {
+  COMPLAINT_SUBMITTED
+  COMPLAINT_ASSIGNED
+  WORK_STARTED
+  COMPLAINT_RESOLVED
+  VERIFICATION_REQUIRED
+  COMPLAINT_REOPENED
+  GENERAL
+}
+
+model User {
+  id            String    @id @default(uuid())
+  name          String
+  email         String    @unique
+  phone         String?
+  password      String
+  role          Role      @default(CITIZEN)
+  language      String?
+  ward          String?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  complaints        Complaint[]           @relation("UserComplaints")
+  statusChanges     ComplaintStatusHistory[]
+  uploadedImages    ComplaintImage[]
+  notifications     Notification[]
+  feedbacks         Feedback[]
+  workerProfile     Worker?
+  assignmentsMade   ComplaintAssignment[] @relation("AssignedBy")
+
+  @@map("users")
+}
+
+model Department {
+  id            String   @id @default(uuid())
+  name          String
+  description   String?
+  contactEmail  String?
+  ward          String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  workers     Worker[]
+  complaints  Complaint[]
+
+  @@map("departments")
+}
+
+model Worker {
+  id            String   @id @default(uuid())
+  user          User     @relation(fields: [userId], references: [id])
+  userId        String   @unique
+  department    Department @relation(fields: [departmentId], references: [id])
+  departmentId  String
+  employeeId    String   @unique
+  ward          String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  assignments   ComplaintAssignment[]
+
+  @@map("workers")
+}
+
+model Complaint {
+  id               String   @id @default(uuid())
+  complaintNumber  String   @unique
+  user             User     @relation("UserComplaints", fields: [userId], references: [id])
+  userId           String
+  title            String
+  description      String
+  category          Category
+  priority         Priority @default(MEDIUM)
+  status           ComplaintStatus @default(SUBMITTED)
+
+  latitude         Float?
+  longitude        Float?
+  address          String?
+  ward             String?
+
+  department       Department? @relation(fields: [departmentId], references: [id])
+  departmentId     String?
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  resolvedAt       DateTime?
+
+  images           ComplaintImage[]
+  statusHistory    ComplaintStatusHistory[]
+  assignment       ComplaintAssignment?
+  aiAnalysis       AIAnalysis?
+  feedback         Feedback?
+  notifications    Notification[]
+  duplicateOfGroup DuplicateGroup[] @relation("DuplicateMain")
+
+  @@map("complaints")
+}
+
+model ComplaintStatusHistory {
+  id           String   @id @default(uuid())
+  complaint    Complaint @relation(fields: [complaintId], references: [id])
+  complaintId  String
+  oldStatus    ComplaintStatus?
+  newStatus    ComplaintStatus
+  changedBy    User     @relation(fields: [changedById], references: [id])
+  changedById  String
+  comment      String?
+  createdAt    DateTime @default(now())
+
+  @@map("complaint_status_history")
+}
+
+model ComplaintImage {
+  id           String    @id @default(uuid())
+  complaint    Complaint @relation(fields: [complaintId], references: [id])
+  complaintId  String
+  imageUrl     String
+  imageType    ImageType
+  uploadedBy   User      @relation(fields: [uploadedById], references: [id])
+  uploadedById String
+  createdAt    DateTime  @default(now())
+
+  @@map("complaint_images")
+}
+
+model ComplaintAssignment {
+  id            String    @id @default(uuid())
+  complaint     Complaint @relation(fields: [complaintId], references: [id])
+  complaintId   String    @unique
+  worker        Worker    @relation(fields: [workerId], references: [id])
+  workerId      String
+  assignedBy    User      @relation("AssignedBy", fields: [assignedById], references: [id])
+  assignedById  String
+  assignedAt    DateTime  @default(now())
+  completedAt   DateTime?
+
+  @@map("complaint_assignments")
+}
+
+model AIAnalysis {
+  id            String   @id @default(uuid())
+  complaint     Complaint @relation(fields: [complaintId], references: [id])
+  complaintId   String   @unique
+  category      Category?
+  priority      Priority?
+  department    String?
+  confidence    Float?
+  reason        String?
+  createdAt     DateTime @default(now())
+
+  @@map("ai_analysis")
+}
+
+model DuplicateGroup {
+  id              String   @id @default(uuid())
+  mainComplaint   Complaint @relation("DuplicateMain", fields: [mainComplaintId], references: [id])
+  mainComplaintId String
+  duplicateComplaintIds String[] // stores ids of duplicate complaints
+  createdAt       DateTime @default(now())
+
+  @@map("duplicate_groups")
+}
+
+model Feedback {
+  id           String   @id @default(uuid())
+  complaint    Complaint @relation(fields: [complaintId], references: [id])
+  complaintId  String   @unique
+  user         User     @relation(fields: [userId], references: [id])
+  userId       String
+  rating       Int
+  comment      String?
+  createdAt    DateTime @default(now())
+
+  @@map("feedback")
+}
+
+model Notification {
+  id           String   @id @default(uuid())
+  user         User     @relation(fields: [userId], references: [id])
+  userId       String
+  complaint    Complaint? @relation(fields: [complaintId], references: [id])
+  complaintId  String?
+  title        String
+  message      String
+  type         NotificationType @default(GENERAL)
+  isRead       Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  @@map("notifications")
+}

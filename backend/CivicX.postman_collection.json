@@ -1,0 +1,300 @@
+{
+  "info": {
+    "name": "CivicX Backend",
+    "description": "Full API collection for the CivicX (CivicConnect) backend. Set base_url and access_token as collection variables.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:5000" },
+    { "key": "access_token", "value": "" },
+    { "key": "refresh_token", "value": "" },
+    { "key": "complaint_id", "value": "" },
+    { "key": "worker_id", "value": "" },
+    { "key": "department_id", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Yaghesh\",\n  \"email\": \"yaghesh@gmail.com\",\n  \"password\": \"password123\",\n  \"phone\": \"9999999999\",\n  \"language\": \"Marathi\",\n  \"ward\": \"Ward 3\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"yaghesh@gmail.com\",\n  \"password\": \"password123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/auth/refresh",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{base_url}}/api/auth/logout"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Complaints",
+      "item": [
+        {
+          "name": "Create Complaint",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/complaints",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Large pothole on MG Road\",\n  \"description\": \"Deep pothole causing traffic issues\",\n  \"category\": \"POTHOLE\",\n  \"latitude\": 19.455,\n  \"longitude\": 72.811,\n  \"address\": \"MG Road, near signal\",\n  \"ward\": \"Ward 3\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Complaints (filter+search+paginate)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/complaints?category=POTHOLE&status=SUBMITTED&page=1&page_size=20&search=pothole"
+          }
+        },
+        {
+          "name": "My Complaints",
+          "request": { "method": "GET", "url": "{{base_url}}/api/complaints/my" }
+        },
+        {
+          "name": "Nearby Complaints (duplicate check)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/complaints/nearby?latitude=19.455&longitude=72.811&category=POTHOLE&radius_km=1"
+          }
+        },
+        {
+          "name": "Get Complaint Detail",
+          "request": { "method": "GET", "url": "{{base_url}}/api/complaints/{{complaint_id}}" }
+        },
+        {
+          "name": "Update Complaint",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/complaints/{{complaint_id}}",
+            "body": { "mode": "raw", "raw": "{\n  \"priority\": \"HIGH\"\n}" }
+          }
+        },
+        {
+          "name": "Delete Complaint",
+          "request": { "method": "DELETE", "url": "{{base_url}}/api/complaints/{{complaint_id}}" }
+        },
+        {
+          "name": "Get Complaint Timeline",
+          "request": { "method": "GET", "url": "{{base_url}}/api/complaints/{{complaint_id}}/timeline" }
+        },
+        {
+          "name": "Update Status",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/complaints/{{complaint_id}}/status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"VERIFIED\",\n  \"comment\": \"Confirmed on site\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Assign Worker",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/complaints/{{complaint_id}}/assign",
+            "body": { "mode": "raw", "raw": "{\n  \"workerId\": \"{{worker_id}}\"\n}" }
+          }
+        },
+        {
+          "name": "Verify Complaint (Officer)",
+          "request": { "method": "POST", "url": "{{base_url}}/api/complaints/{{complaint_id}}/verify" }
+        },
+        {
+          "name": "Reopen Complaint (Citizen)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/complaints/{{complaint_id}}/reopen",
+            "body": { "mode": "raw", "raw": "{\n  \"comment\": \"Issue is back\"\n}" }
+          }
+        },
+        {
+          "name": "Upload Complaint Image",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/complaints/{{complaint_id}}/images",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "image", "type": "file", "src": "" },
+                { "key": "imageType", "value": "BEFORE", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Save AI Analysis",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/complaints/{{complaint_id}}/ai-analysis",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"POTHOLE\",\n  \"priority\": \"HIGH\",\n  \"department\": \"ROAD\",\n  \"confidence\": 0.94,\n  \"reason\": \"Detected pothole pattern in image\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get AI Analysis",
+          "request": { "method": "GET", "url": "{{base_url}}/api/complaints/{{complaint_id}}/ai-analysis" }
+        },
+        {
+          "name": "Create Duplicate Group",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/complaints/{{complaint_id}}/duplicate-group",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"duplicateComplaintIds\": [\"<id1>\", \"<id2>\"]\n}"
+            }
+          }
+        },
+        {
+          "name": "Submit Feedback",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/complaints/{{complaint_id}}/feedback",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"comment\": \"Issue was resolved quickly.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Feedback",
+          "request": { "method": "GET", "url": "{{base_url}}/api/complaints/{{complaint_id}}/feedback" }
+        }
+      ]
+    },
+    {
+      "name": "Departments",
+      "item": [
+        { "name": "List Departments", "request": { "method": "GET", "url": "{{base_url}}/api/departments" } },
+        {
+          "name": "Create Department (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/departments",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Road Department\",\n  \"description\": \"Handles road issues\",\n  \"contactEmail\": \"road@civicx.local\",\n  \"ward\": \"Ward 3\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Department (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/departments/{{department_id}}",
+            "body": { "mode": "raw", "raw": "{\n  \"isActive\": true\n}" }
+          }
+        },
+        {
+          "name": "List Department Workers",
+          "request": { "method": "GET", "url": "{{base_url}}/api/departments/{{department_id}}/workers" }
+        }
+      ]
+    },
+    {
+      "name": "Workers",
+      "item": [
+        {
+          "name": "Create Worker (Officer/Admin)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/workers",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Rahul Sharma\",\n  \"email\": \"rahul@civicx.local\",\n  \"password\": \"password123\",\n  \"departmentId\": \"{{department_id}}\",\n  \"employeeId\": \"EMP-1001\",\n  \"ward\": \"Ward 3\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Worker (activate/deactivate/reassign)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/workers/{{worker_id}}",
+            "body": { "mode": "raw", "raw": "{\n  \"isActive\": false\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        { "name": "List Notifications", "request": { "method": "GET", "url": "{{base_url}}/api/notifications?is_read=false" } },
+        { "name": "Mark One Read", "request": { "method": "PATCH", "url": "{{base_url}}/api/notifications/:id/read" } },
+        { "name": "Mark All Read", "request": { "method": "PATCH", "url": "{{base_url}}/api/notifications/read-all" } }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        { "name": "Dashboard", "request": { "method": "GET", "url": "{{base_url}}/api/admin/dashboard" } },
+        { "name": "All Complaints", "request": { "method": "GET", "url": "{{base_url}}/api/admin/complaints?page=1&page_size=20" } },
+        { "name": "Statistics", "request": { "method": "GET", "url": "{{base_url}}/api/admin/statistics" } },
+        { "name": "Category Breakdown", "request": { "method": "GET", "url": "{{base_url}}/api/admin/categories" } },
+        { "name": "Ward Breakdown", "request": { "method": "GET", "url": "{{base_url}}/api/admin/wards" } },
+        { "name": "Heatmap", "request": { "method": "GET", "url": "{{base_url}}/api/admin/heatmap" } }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        { "name": "Health Check", "request": { "method": "GET", "url": "{{base_url}}/health" } }
+      ]
+    }
+  ]
+}
