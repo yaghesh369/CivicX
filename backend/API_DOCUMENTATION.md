@@ -47,12 +47,32 @@ All protected routes require header: `Authorization: Bearer <access_token>`
 ```
 **Response (200):**
 ```json
-{ "access": "...", "refresh": "..." }
+{
+  "user": { "id": "...", "name": "Yaghesh", "email": "yaghesh@gmail.com", "role": "CITIZEN", "ward": "Ward 3" },
+  "access": "...",
+  "refresh": "..."
+}
 ```
 **Possible Errors:**
 - `400` — email or password missing
 - `401` — invalid email or password
 - `403` — account deactivated
+
+---
+
+### Get Current User
+**Method:** GET
+**URL:** `/api/auth/me`
+**Authentication:** Required
+**Body:** None
+**Response (200):**
+```json
+{
+  "user": { "id": "...", "name": "Yaghesh", "email": "yaghesh@gmail.com", "phone": null, "role": "CITIZEN", "language": null, "ward": "Ward 3", "isActive": true, "createdAt": "...", "updatedAt": "..." }
+}
+```
+**Possible Errors:**
+- `401` — missing/invalid/expired access token
 
 ---
 

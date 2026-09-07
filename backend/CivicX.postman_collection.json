@@ -63,6 +63,14 @@
             "header": [],
             "url": "{{base_url}}/api/auth/logout"
           }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/auth/me"
+          }
         }
       ]
     },

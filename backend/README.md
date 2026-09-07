@@ -76,9 +76,10 @@ All protected routes require `Authorization: Bearer <access_token>`.
 | Method | URL | Auth | Notes |
 |---|---|---|---|
 | POST | `/api/auth/register` | No | `{name,email,password,phone?,language?,ward?}` → always creates a CITIZEN |
-| POST | `/api/auth/login` | No | `{email,password}` → `{access, refresh}` |
+| POST | `/api/auth/login` | No | `{email,password}` → `{user, access, refresh}` |
 | POST | `/api/auth/refresh` | No | `{refresh}` → `{access}` |
 | POST | `/api/auth/logout` | Yes | Stateless — client discards tokens |
+| GET | `/api/auth/me` | Yes | Returns the authenticated user profile |
 
 ### Complaints
 | Method | URL | Auth | Notes |

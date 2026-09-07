@@ -91,7 +91,22 @@ const login = asyncHandler(async (req, res) => {
   const access = signAccessToken(user);
   const refresh = signRefreshToken(user);
 
-  res.json({ access, refresh });
+  res.json({
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      ward: user.ward,
+    },
+    access,
+    refresh,
+  });
+});
+
+// GET /api/auth/me/
+const getCurrentUser = asyncHandler(async (req, res) => {
+  res.json({ user: req.user });
 });
 
 // POST /api/auth/refresh/
@@ -124,4 +139,4 @@ const logout = asyncHandler(async (req, res) => {
   res.json({ message: "Logged out successfully. Discard your tokens client-side." });
 });
 
-module.exports = { register, login, refresh, logout };
+module.exports = { register, login, getCurrentUser, refresh, logout };
