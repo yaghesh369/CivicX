@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import imageCompression from 'browser-image-compression'
 
@@ -6,11 +6,26 @@ export default function ImageUploader({ image, onImageChange, compressed }) {
   const { t } = useTranslation()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [cameraOpen, setCameraOpen] = useState(false)
   const cameraInputRef = useRef(null)
   const galleryInputRef = useRef(null)
+  const videoRef = useRef(null)
+  const streamRef = useRef(null)
 
-  const handleImageSelect = async (event) => {
-    const file = event.target.files?.[0]
+  useEffect(() => {
+    return () => {
+      streamRef.current?.getTracks().forEach((track) => track.stop())
+      streamRef.current = null
+    }
+  }, [])
+
+  const stopCamera = () => {
+    streamRef.current?.getTracks().forEach((track) => track.stop())
+    streamRef.current = null
+    setCameraOpen(false)
+  }
+
+  const processFile = async (file) => {
     if (!file) return
 
     setError('')
@@ -32,10 +47,53 @@ export default function ImageUploader({ image, onImageChange, compressed }) {
       setError(t('report.compressError'))
       setLoading(false)
     }
+  }
+
+  const handleImageSelect = async (event) => {
+    await processFile(event.target.files?.[0])
     event.target.value = ''
   }
 
-  const openCamera = () => cameraInputRef.current?.click()
+  const openCamera = async () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      cameraInputRef.current?.click()
+      return
+    }
+
+    setError('')
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } },
+        audio: false,
+      })
+      streamRef.current = stream
+      setCameraOpen(true)
+      requestAnimationFrame(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream
+          videoRef.current.play().catch(() => {})
+        }
+      })
+    } catch {
+      setError(t('report.cameraError', { defaultValue: 'Camera access was blocked. Please allow camera access or choose a photo from your gallery.' }))
+    }
+  }
+
+  const capturePhoto = () => {
+    const video = videoRef.current
+    if (!video?.videoWidth || !video.videoHeight) return
+
+    const canvas = document.createElement('canvas')
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height)
+    canvas.toBlob(async (blob) => {
+      if (!blob) return
+      await processFile(new File([blob], `civicx-photo-${Date.now()}.jpg`, { type: 'image/jpeg' }))
+      stopCamera()
+    }, 'image/jpeg', 0.92)
+  }
+
   const openGallery = () => galleryInputRef.current?.click()
 
   return (
@@ -101,6 +159,41 @@ export default function ImageUploader({ image, onImageChange, compressed }) {
           >
             🖼 {t('report.gallery')}
           </button>
+        </div>
+      )}
+
+      {cameraOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4" role="dialog" aria-modal="true" aria-label={t('report.cameraTitle', { defaultValue: 'Take a photo' })}>
+          <div className="w-full max-w-lg rounded-3xl bg-white p-4 shadow-2xl dark:bg-slate-900">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">{t('report.cameraTitle', { defaultValue: 'Take a photo' })}</h2>
+              <button
+                type="button"
+                onClick={stopCamera}
+                className="rounded-full px-3 py-1 text-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                aria-label={t('common.cancel')}
+              >
+                ×
+              </button>
+            </div>
+            <video ref={videoRef} autoPlay playsInline muted className="aspect-video w-full rounded-2xl bg-black object-cover" />
+            <div className="mt-4 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={stopCamera}
+                className="rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200"
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                type="button"
+                onClick={capturePhoto}
+                className="rounded-2xl bg-sky-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-sky-600"
+              >
+                📷 {t('report.capture', { defaultValue: 'Capture' })}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

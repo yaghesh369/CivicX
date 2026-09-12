@@ -12,6 +12,8 @@ const statusStyles = {
   assigned: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300',
 }
 
+const fallbackStatusStyle = 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
+
 const priorityStyles = {
   High: 'text-red-600 dark:text-red-400',
   Medium: 'text-amber-600 dark:text-amber-400',
@@ -38,21 +40,27 @@ export default function ComplaintCard({ complaint }) {
   return (
     <Link
       to={`/complaints/${complaint.id}`}
-      className="group block overflow-hidden rounded-3xl border border-slate-200/50 bg-gradient-to-br from-white to-slate-50 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-sky-300 hover:shadow-xl dark:border-slate-700/50 dark:from-slate-800 dark:to-slate-900/50"
+      className="group block overflow-hidden rounded-3xl border border-slate-200/50 bg-linear-to-br from-white to-slate-50 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-sky-300 hover:shadow-xl dark:border-slate-700/50 dark:from-slate-800 dark:to-slate-900/50"
     >
       {/* Header with image and status */}
       <div className="relative overflow-hidden bg-gradient-to-r from-sky-400 to-emerald-400 pb-40">
-        <img
-          src={complaint.image}
-          alt={complaint.title}
-          className="h-full w-full object-cover opacity-40 transition duration-500 group-hover:scale-110"
-        />
+        {complaint.image ? (
+          <img
+            src={complaint.image}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover opacity-40 transition duration-500 group-hover:scale-110"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-6xl opacity-40" aria-hidden="true">
+            {complaint.categoryEmoji || '📌'}
+          </div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
         {/* Status badge */}
         <div className="absolute right-4 top-4">
-          <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${statusStyles[complaint.status]}`}>
-            {t(`status.${complaint.status}`)}
+          <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${statusStyles[complaint.status] || fallbackStatusStyle}`}>
+            {t(`status.${complaint.status}`, { defaultValue: complaint.status || 'Unknown' })}
           </span>
         </div>
 

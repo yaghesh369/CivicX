@@ -4,6 +4,16 @@ const API_BASE = import.meta.env.VITE_API_URL || '/api'
 
 const api = axios.create({ baseURL: API_BASE, timeout: 15000 })
 
+function readTokens() {
+  try {
+    const raw = localStorage.getItem('civic-tokens')
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    localStorage.removeItem('civic-tokens')
+    return null
+  }
+}
+
 function decodeTokenPayload(token) {
   try {
     const base64 = token.split('.')[1]
@@ -14,8 +24,7 @@ function decodeTokenPayload(token) {
 }
 
 api.interceptors.request.use((config) => {
-  const raw = localStorage.getItem('civic-tokens')
-  const tokens = raw ? JSON.parse(raw) : null
+  const tokens = readTokens()
   if (tokens?.access) {
     config.headers.Authorization = `Bearer ${tokens.access}`
   }
@@ -54,8 +63,7 @@ api.interceptors.response.use(
       orig._retry = true
       isRefreshing = true
       try {
-        const raw = localStorage.getItem('civic-tokens')
-        const tokens = raw ? JSON.parse(raw) : null
+        const tokens = readTokens()
         if (!tokens?.refresh) throw new Error('No refresh token')
         const { data } = await axios.post(`${API_BASE}/auth/refresh`, { refresh: tokens.refresh })
         const next = { ...tokens, access: data.access }
@@ -86,7 +94,7 @@ const CATEGORY_LABELS = {
   DRAINAGE: 'Drainage',
   STREETLIGHT: 'Streetlight',
   PUBLIC_PROPERTY_DAMAGE: 'Public Property Damage',
-  ILLEGAL_DUMPING: 'Illegal Dumping',
+  ILLEGAL_DUMPING: 'Waste Dumping',
   OTHER: 'Other',
 }
 
@@ -211,8 +219,8 @@ export async function getCurrentUserApi() {
   return data.user
 }
 
-export async function registerApi({ name, email, password }) {
-  const { data } = await api.post('/auth/register', { name, email, password })
+export async function registerApi({ name, email, password, phone, language, ward }) {
+  const { data } = await api.post('/auth/register', { name, email, password, phone, language, ward })
   return { success: true, user: data.user, access: data.access, refresh: data.refresh }
 }
 

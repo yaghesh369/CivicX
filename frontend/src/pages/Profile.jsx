@@ -72,7 +72,7 @@ export default function Profile() {
   const firstName = user?.name?.trim().split(/\s+/)[0] || 'Citizen'
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-emerald-50 px-4 py-8 sm:px-6 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-emerald-50 px-4 py-8 sm:px-6 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       <div className="mx-auto max-w-5xl">
         {/* Profile Header */}
         <div className="animate-popIn mb-8 overflow-hidden rounded-4xl bg-linear-to-br from-violet-500 to-sky-500 p-8 text-white shadow-2xl shadow-violet-500/30 sm:p-10">
@@ -142,7 +142,7 @@ export default function Profile() {
                 key={idx}
                 className={`animate-fadeInUp rounded-3xl border p-6 text-center shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg ${
                   achievement.earned
-                    ? 'border-amber-200/70 bg-gradient-to-br from-white to-amber-50 shadow-amber-100 dark:border-amber-500/30 dark:from-slate-800 dark:to-amber-900/20'
+                    ? 'border-amber-200/70 bg-linear-to-br from-white to-amber-50 shadow-amber-100 dark:border-amber-500/30 dark:from-slate-800 dark:to-amber-900/20'
                     : 'border-slate-200/50 bg-white dark:border-slate-700/50 dark:bg-slate-800/50'
                 }`}
                 style={{ animationDelay: `${idx * 80}ms` }}

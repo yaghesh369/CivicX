@@ -13,15 +13,22 @@ export default function ComplaintDetails() {
   const [rating, setRating] = useState(0)
   const [feedbackText, setFeedbackText] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function fetchComplaint() {
-      const response = await getComplaintApi(id)
-      setComplaint(response.complaint)
+      try {
+        const response = await getComplaintApi(id)
+        setComplaint(response.complaint)
+      } catch (requestError) {
+        setError(requestError.response?.data?.error || t('details.loadError', { defaultValue: 'Unable to load this complaint.' }))
+      } finally {
+        setLoading(false)
+      }
     }
 
     fetchComplaint()
-  }, [id])
+  }, [id, t])
 
   const handleVerify = (verified) => {
     if (!verified) {
@@ -55,7 +62,7 @@ export default function ComplaintDetails() {
     }
   }
 
-  if (!complaint) {
+  if (loading) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-16 text-center text-slate-500 dark:text-slate-400">
         {t('details.loading')}
@@ -63,10 +70,14 @@ export default function ComplaintDetails() {
     )
   }
 
+  if (!complaint) {
+    return <div className="mx-auto max-w-4xl px-4 py-16 text-center text-rose-600 dark:text-rose-400">{error}</div>
+  }
+
   const statusLabel = complaint.status === 'in_progress' ? t('status.in_progress') : t(`status.${complaint.status}`)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-emerald-50 px-4 py-6 sm:px-6 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-emerald-50 px-4 py-6 sm:px-6 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       <div className="mx-auto max-w-5xl">
         <div className="animate-fadeInUp rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm sm:p-6 dark:border-slate-700 dark:bg-slate-800/50">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -83,11 +94,17 @@ export default function ComplaintDetails() {
 
           <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
             <div className="space-y-4">
-              <img
-                src={complaint.image}
-                alt={complaint.title}
-                className="h-72 w-full rounded-[28px] object-cover transition duration-300 hover:scale-[1.01]"
-              />
+              {complaint.image ? (
+                <img
+                  src={complaint.image}
+                  alt={complaint.title}
+                  className="h-72 w-full rounded-[28px] object-cover transition duration-300 hover:scale-[1.01]"
+                />
+              ) : (
+                <div className="flex h-72 w-full items-center justify-center rounded-[28px] bg-linear-to-br from-sky-400 to-emerald-400 text-7xl" aria-hidden="true">
+                  {complaint.categoryEmoji || '📌'}
+                </div>
+              )}
               <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/30">
                 <div className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
                   {t('details.description')}

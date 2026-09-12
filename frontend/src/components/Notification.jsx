@@ -29,6 +29,12 @@ export default function Notification({ notification, onMarkRead }) {
     <div
       className={`group cursor-pointer rounded-3xl border-2 p-6 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-lg ${style.bg} ${style.border}`}
       onClick={() => onMarkRead?.(notification.id)}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          onMarkRead?.(notification.id)
+        }
+      }}
       role="button"
       tabIndex={0}
     >

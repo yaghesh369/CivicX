@@ -194,7 +194,7 @@ export function CivicProvider({ children }) {
     if (!user) return
 
     const loadInitialData = async () => {
-      const [complaintsResponse, notificationsResponse, savedDrafts] = await Promise.all([
+      const [complaintsResult, notificationsResult, draftsResult] = await Promise.allSettled([
         getComplaintsApi(),
         getNotificationsApi(),
         readDraftsFromIndexedDB(),
@@ -202,9 +202,14 @@ export function CivicProvider({ children }) {
 
       refreshUser()
 
-      setComplaints(complaintsResponse.complaints)
-      setNotifications(notificationsResponse.notifications)
+      if (complaintsResult.status === 'fulfilled') {
+        setComplaints(complaintsResult.value.complaints)
+      }
+      if (notificationsResult.status === 'fulfilled') {
+        setNotifications(notificationsResult.value.notifications)
+      }
 
+      const savedDrafts = draftsResult.status === 'fulfilled' ? draftsResult.value : []
       if (savedDrafts.length > 0) {
         setOfflineDrafts(savedDrafts)
         if (navigator.onLine) {

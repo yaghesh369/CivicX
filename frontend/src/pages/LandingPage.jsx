@@ -272,9 +272,9 @@ export default function LandingPage() {
                 <ul className="mt-4 space-y-2">
                   {col.items.map((item) => (
                     <li key={item}>
-                      <a href="#" className="text-sm text-slate-400 transition hover:text-white">
+                      <span className="text-sm text-slate-400">
                         {item}
-                      </a>
+                      </span>
                     </li>
                   ))}
                 </ul>

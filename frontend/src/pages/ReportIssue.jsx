@@ -16,7 +16,7 @@ const issueTemplates = [
   { label: 'Streetlight', value: 'streetlight', emoji: '💡' },
   { label: 'Road Damage', value: 'road', emoji: '🛣' },
   { label: 'Drainage', value: 'drainage', emoji: '🚰' },
-  { label: 'Illegal Dumping', value: 'illegal_dumping', emoji: '🗑' },
+  { label: 'Waste Dumping', value: 'illegal_dumping', emoji: '🗑' },
   { label: 'Other', value: 'other', emoji: '📌' },
 ]
 
@@ -36,6 +36,8 @@ export default function ReportIssue() {
   const [recording, setRecording] = useState(false)
   const [speechError, setSpeechError] = useState('')
   const [error, setError] = useState('')
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const { register, handleSubmit, control, setValue } = useForm({
     defaultValues: {
@@ -49,7 +51,7 @@ export default function ReportIssue() {
 
   const formattedLocation = useMemo(() => ({ lat: markerPosition[0], lng: markerPosition[1] }), [markerPosition])
 
-  const categoryLabel = (value) => t(`report.templates.${value}`) || value
+  const categoryLabel = (value) => t(`report.templates.${value}`, { defaultValue: value })
 
   const handleImageChange = (image, file) => {
     setSelectedImage(image)
@@ -104,28 +106,30 @@ export default function ReportIssue() {
   }
 
   const handleAiAnalysis = async () => {
-    const result = await getAIAnalysisApi({ description: watchDescription, category: watchCategory })
-    setAnalysis(result.result)
-
+    setIsAnalyzing(true)
     try {
-      const backendCategory = { pothole: 'POTHOLE', road: 'ROAD', garbage: 'GARBAGE', water: 'WATER_LEAKAGE', streetlight: 'STREETLIGHT', drainage: 'DRAINAGE', illegal_dumping: 'ILLEGAL_DUMPING', public_property_damage: 'PUBLIC_PROPERTY_DAMAGE', other: 'OTHER' }[watchCategory]
-      const nearby = await getNearbyComplaintsApi({
-        latitude: formattedLocation.lat,
-        longitude: formattedLocation.lng,
-        category: backendCategory,
-        radiusKm: 1,
-      })
-      if (Array.isArray(nearby) && nearby.length > 0) {
-        setDuplicate(nearby[0])
-      } else {
+      const result = await getAIAnalysisApi({ description: watchDescription, category: watchCategory })
+      setAnalysis(result.result)
+
+      try {
+        const backendCategory = { pothole: 'POTHOLE', road: 'ROAD', garbage: 'GARBAGE', water: 'WATER_LEAKAGE', streetlight: 'STREETLIGHT', drainage: 'DRAINAGE', illegal_dumping: 'ILLEGAL_DUMPING', public_property_damage: 'PUBLIC_PROPERTY_DAMAGE', other: 'OTHER' }[watchCategory]
+        const nearby = await getNearbyComplaintsApi({
+          latitude: formattedLocation.lat,
+          longitude: formattedLocation.lng,
+          category: backendCategory,
+          radiusKm: 1,
+        })
+        setDuplicate(nearby[0] || null)
+      } catch {
         setDuplicate(null)
       }
-    } catch {
-      setDuplicate(null)
+      return result.result
+    } finally {
+      setIsAnalyzing(false)
     }
   }
 
-  const handleConfirm = async (values) => {
+  const handleConfirm = async (values, currentAnalysis = analysis) => {
     const template = issueTemplates.find((item) => item.value === values.category)
     const payload = {
       title: template?.label || 'Civic Issue',
@@ -139,23 +143,24 @@ export default function ReportIssue() {
     if (!navigator.onLine) {
       const draftId = `draft-${crypto.randomUUID?.() || 'offline'}`
       setOfflineNotice(t('report.offlineSaved'))
-      addDraft({ ...payload, id: draftId, status: 'submitted', department: analysis?.department, priority: analysis?.priority, image: selectedImage })
+      addDraft({ ...payload, id: draftId, status: 'submitted', department: currentAnalysis?.department, priority: currentAnalysis?.priority, image: selectedImage })
       setSubmitted(true)
       setComplaintId(draftId)
       return
     }
 
     setError('')
+    setIsSubmitting(true)
     try {
       const response = await createComplaintApi(payload)
       const newComplaint = response.complaint
 
-      if (analysis && analysis.categoryKey) {
+      if (currentAnalysis && currentAnalysis.categoryKey) {
         try {
           await saveAIAnalysisApi(response.complaintId, {
-            category: analysis.categoryKey,
-            priority: analysis.priorityKey,
-            department: analysis.department,
+            category: currentAnalysis.categoryKey,
+            priority: currentAnalysis.priorityKey,
+            department: currentAnalysis.department,
             confidence: 0.9,
             reason: 'Client-side heuristic analysis.',
           })
@@ -177,14 +182,18 @@ export default function ReportIssue() {
       setSubmitted(true)
     } catch (e) {
       setError(e.response?.data?.error || t('report.submitError'))
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   const onSubmit = async (values) => {
-    if (!analysis) {
-      await handleAiAnalysis()
+    if (isSubmitting || isAnalyzing) return
+    let currentAnalysis = analysis
+    if (!currentAnalysis) {
+      currentAnalysis = await handleAiAnalysis()
     }
-    await handleConfirm(values)
+    await handleConfirm(values, currentAnalysis)
   }
 
   const sectionClass = 'rounded-[30px] border border-slate-200 bg-white p-4 shadow-sm transition duration-300 hover:shadow-md sm:p-6 dark:border-slate-700 dark:bg-slate-800/50'
@@ -290,9 +299,10 @@ export default function ReportIssue() {
                 <button
                   type="button"
                   onClick={handleAiAnalysis}
-                  className="rounded-2xl bg-sky-500 px-4 py-2 text-sm font-semibold text-white transition duration-200 hover:bg-sky-600"
+                  disabled={isAnalyzing || isSubmitting}
+                  className="rounded-2xl bg-sky-500 px-4 py-2 text-sm font-semibold text-white transition duration-200 hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {t('report.analyzeIssue')}
+                  {isAnalyzing ? t('common.loading') : t('report.analyzeIssue')}
                 </button>
               </div>
               {analysis && (
@@ -348,9 +358,10 @@ export default function ReportIssue() {
                 </button>
                 <button
                   type="submit"
-                  className="rounded-2xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white transition duration-200 hover:bg-emerald-600 hover:shadow-lg"
+                  disabled={isSubmitting || isAnalyzing}
+                  className="rounded-2xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white transition duration-200 hover:bg-emerald-600 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {t('report.submit')}
+                  {isSubmitting ? t('common.loading') : t('report.submit')}
                 </button>
               </div>
             </div>
