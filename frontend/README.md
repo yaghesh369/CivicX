@@ -1,15 +1,16 @@
 # CivicConnect Frontend
 
-CivicConnect is a Progressive Web App (PWA) that lets citizens report and track civic issues (potholes, garbage, water leaks, streetlights, and more) with photo / GPS evidence, AI-assisted categorization, offline drafts, and real-time status notifications.
+CivicConnect is a Progressive Web App (PWA) that lets citizens report and track civic issues (potholes, garbage, water leaks, streetlights, and more) with photo / GPS evidence, heuristic-assisted categorization, offline drafts, and API-backed status notifications.
 
 ## Features
 
 - **Report issues** with photo, GPS location, and description
-- **AI analysis** — automatic categorization, priority and department routing
-- **Duplicate detection** — finds similar issues already reported nearby
-- **Real-time tracking** — status timeline from submission to resolution
-- **Push-ready PWA** — installable on all devices, works offline
+- **Issue analysis** — keyword-based categorization, priority and department suggestions
+- **Duplicate detection** — checks for similar issues already reported nearby
+- **Status tracking** — status timeline from submission to resolution
+- **Installable PWA** — install prompts, service-worker updates and cached app assets
 - **Offline drafts** — save reports offline and auto-sync when back online
+- **Camera capture** — use the device camera in supported browsers, or choose from the gallery
 - **Multi-language** — English, हिन्दी (Hindi) and मराठी (Marathi)
 - **Dark mode** — light / dark theme toggle
 - **Notifications** — status updates, unread indicators, mark-all-read
@@ -59,6 +60,13 @@ src/
 ## Environment
 
 Optional: set `VITE_API_URL` to point at a backend base URL. Defaults to `/api` (dev proxy).
+
+## Browser Notes
+
+- Camera capture requires browser camera permission and works on `localhost` or HTTPS. Browsers without `getUserMedia()` use the native camera/file picker fallback.
+- Offline mode caches the application and stores complaint drafts in IndexedDB. Live complaints, notifications, maps and submission still require a network connection.
+- The analysis shown in the report form is a local keyword heuristic, not a connected machine-learning provider.
+- Install and update prompts depend on browser and platform support. iOS uses the browser's Add to Home Screen flow.
 
 ## License
 

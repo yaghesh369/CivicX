@@ -1,23 +1,23 @@
 # CivicX
 
-A comprehensive citizen engagement platform that bridges the gap between citizens and local authorities. Report civic issues, track complaint resolutions, and contribute to community improvement in real-time.
+A comprehensive citizen engagement platform that bridges the gap between citizens and local authorities. Report civic issues, track complaint resolutions, and contribute to community improvement through API-backed status updates.
 
 ## 🌟 Features
 
 ### Citizen Portal
 - **Easy Issue Reporting**: Report potholes, garbage, water leaks, streetlight issues, and more
-- **AI-Powered Analysis**: Automatic issue categorization and department routing using ML
+- **Issue Analysis**: Keyword-based issue categorization and department suggestions in the frontend
 - **GPS & Photo Support**: Capture location and photo evidence for complaints
-- **Offline Support**: Save complaint drafts offline and sync automatically when connection returns
-- **Real-time Tracking**: Monitor complaint resolution status from submission to closure
+- **Offline Support**: Save complaint drafts offline and sync automatically when connection returns; live API data still requires a network
+- **Status Tracking**: Monitor complaint resolution status from submission to closure
 - **Multi-language**: Support for English, Hindi, and Marathi
 - **Dark Mode**: User-friendly dark theme support
-- **PWA Installation**: Install the app on your device for native-like experience
+- **PWA Installation**: Install the app on supported browsers for a native-like experience
 
 ### Admin & Department Portal
 - Complaint verification and assignment
 - Team management and worker tracking
-- Real-time notifications and updates
+- API-backed notifications and status updates
 - Performance metrics and analytics
 
 ## 🛠️ Tech Stack
